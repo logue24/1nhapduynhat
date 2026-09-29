@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Nút Thích — Xác minh thiết bị thật (WebRTC)</title>
+<title>Nút Thích Công Khai</title>
 <style>
   :root {
     --bg: #0f172a;
@@ -36,16 +36,8 @@
     text-align: center;
     border: 1px solid rgba(255,255,255,0.05);
   }
-  h1 {
-    font-size: 1.5rem;
-    margin-bottom: 8px;
-    font-weight: 700;
-  }
-  .subtitle {
-    color: var(--muted);
-    font-size: 0.9rem;
-    margin-bottom: 30px;
-  }
+  h1 { font-size: 1.5rem; margin-bottom: 8px; font-weight: 700; }
+  .subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 30px; }
   .count-box {
     background: rgba(59,130,246,0.1);
     border: 1px solid rgba(59,130,246,0.3);
@@ -89,16 +81,8 @@
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(59,130,246,0.4);
   }
-  #likeBtn:disabled {
-    cursor: not-allowed;
-    opacity: 0.9;
-  }
-  #likeBtn.liked {
-    background: var(--success);
-  }
-  #likeBtn.verifying {
-    background: var(--muted);
-  }
+  #likeBtn:disabled { cursor: not-allowed; opacity: 0.9; }
+  #likeBtn.liked { background: var(--success); }
   .status {
     margin-top: 16px;
     font-size: 0.85rem;
@@ -117,17 +101,13 @@
     animation: spin 0.8s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .footer {
-    margin-top: 24px;
-    font-size: 0.75rem;
-    color: var(--muted);
-  }
+  .footer { margin-top: 24px; font-size: 0.75rem; color: var(--muted); }
 </style>
 </head>
 <body>
   <div class="card">
     <h1>❤️ Nút Thích Công Khai</h1>
-    <p class="subtitle">Xác minh thiết bị thật qua WebRTC — mỗi người chỉ +1 duy nhất</p>
+    <p class="subtitle">Mỗi người chỉ +1 duy nhất — nhấn là xong</p>
 
     <div class="count-box">
       <div class="count-number" id="countDisplay">—</div>
@@ -135,22 +115,20 @@
     </div>
 
     <button id="likeBtn" disabled>
-      <span id="btnText">Đang khởi tạo…</span>
+      <span id="btnText">Đang tải…</span>
     </button>
 
     <div class="status" id="statusMsg"></div>
-    <div class="footer">Bảo vệ bằng WebRTC + Fingerprint + Cookie 1 năm</div>
+    <div class="footer">Bảo vệ bằng Cookie + LocalStorage + Fingerprint</div>
   </div>
 
-<!-- ===================== FIREBASE SDK (compat để đơn giản) ===================== -->
+<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
 /* =========================================================================
- * ⚙️ CẤU HÌNH — THAY BẰNG THÔNG TIN FIREBASE CỦA BẠN
- * Lấy tại: https://console.firebase.google.com → Project Settings → Web App
- * Nhớ bật Realtime Database và set Rules cho phép đọc/ghi (xem README).
+ * ⚙️ CẤU HÌNH FIREBASE — THAY BẰNG THÔNG TIN CỦA BẠN
  * ========================================================================= */
 const FIREBASE_CONFIG = {
   apiKey: "YOUR_API_KEY",
@@ -163,101 +141,43 @@ const FIREBASE_CONFIG = {
 };
 
 /* =========================================================================
- * 🔐 PHẦN 1: XÁC MINH THIẾT BỊ THẬT QUA WEBRTC
+ * 🔐 CHỐNG TRÙNG 3 LỚP (KHÔNG CẦN XÁC MINH THIẾT BỊ)
  * ========================================================================= */
 
-/**
- * Kiểm tra RTCPeerConnection tồn tại và tạo được ICE candidate thật.
- * Không yêu cầu quyền camera/mic.
- */
-async function checkWebRTCSupport() {
-  return new Promise((resolve) => {
-    if (typeof RTCPeerConnection === 'undefined') {
-      return resolve({ ok: false, reason: "Trình duyệt không hỗ trợ WebRTC" });
-    }
-    const pc = new RTCPeerConnection({
-      iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
-    });
+const COOKIE_NAME = "liked_v1";
+const LS_KEY = "liked_v1";
+const ONE_YEAR = 365 * 24 * 60 * 60 * 1000;
 
-    let gotCandidate = false;
-    const timeout = setTimeout(() => {
-      pc.close();
-      resolve(gotCandidate
-        ? { ok: true }
-        : { ok: false, reason: "Không lấy được ICE candidate — mạng bị chặn hoặc thiết bị ảo" });
-    }, 4000);
-
-    pc.onicecandidate = (e) => {
-      if (e.candidate && e.candidate.candidate) {
-        gotCandidate = true;
-        clearTimeout(timeout);
-        pc.close();
-        resolve({ ok: true, candidate: e.candidate.candidate });
-      }
-    };
-
-    pc.onicecandidateerror = () => {
-      // Bỏ qua lỗi STUN riêng lẻ, vẫn chờ candidate khác
-    };
-
-    try {
-      pc.createDataChannel("probe");
-      pc.createOffer()
-        .then(offer => pc.setLocalDescription(offer))
-        .catch(() => {
-          clearTimeout(timeout);
-          pc.close();
-          resolve({ ok: false, reason: "Không tạo được offer WebRTC" });
-        });
-    } catch (err) {
-      clearTimeout(timeout);
-      pc.close();
-      resolve({ ok: false, reason: "Lỗi khởi tạo WebRTC: " + err.message });
-    }
-  });
+function setCookie(name, value, ms) {
+  const expires = new Date(Date.now() + ms).toUTCString();
+  document.cookie = `${name}=${value}; expires=${expires}; path=/; SameSite=Lax`;
+}
+function getCookie(name) {
+  const m = document.cookie.match(new RegExp("(^|; )" + name + "=([^;]*)"));
+  return m ? decodeURIComponent(m[2]) : null;
+}
+function isAlreadyLiked() {
+  return getCookie(COOKIE_NAME) === "1" || localStorage.getItem(LS_KEY) === "1";
+}
+function markLiked() {
+  setCookie(COOKIE_NAME, "1", ONE_YEAR);
+  try { localStorage.setItem(LS_KEY, "1"); } catch {}
 }
 
 /**
- * Liệt kê thiết bị media. Nếu không có bất kỳ device nào → dấu hiệu môi trường ảo.
- * Lưu ý: Khi chưa cấp quyền, label rỗng nhưng vẫn có deviceId.
+ * Băm SHA-256 từ chuỗi.
  */
-async function checkMediaDevices() {
-  if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
-    return { ok: false, reason: "Không truy cập được danh sách thiết bị media" };
-  }
-  try {
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    if (!devices || devices.length === 0) {
-      return { ok: false, reason: "Không tìm thấy thiết bị media — nghi ngờ máy ảo" };
-    }
-    // Kiểm tra có ít nhất 1 device có deviceId hợp lệ
-    const hasRealId = devices.some(d => d.deviceId && d.deviceId.length > 5);
-    if (!hasRealId) {
-      return { ok: false, reason: "deviceId không hợp lệ — nghi ngờ giả lập" };
-    }
-    return { ok: true, count: devices.length };
-  } catch (e) {
-    return { ok: false, reason: "Lỗi enumerateDevices: " + e.message };
-  }
+async function sha256(str) {
+  const buf = new TextEncoder().encode(str);
+  const hash = await crypto.subtle.digest("SHA-256", buf);
+  return Array.from(new Uint8Array(hash))
+    .map(b => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 /**
- * Phát hiện headless browser / automation qua dấu hiệu đặc trưng.
- */
-function detectAutomation() {
-  const signals = [];
-  if (navigator.webdriver === true) signals.push("navigator.webdriver=true");
-  if (!navigator.plugins || navigator.plugins.length === 0) signals.push("no plugins");
-  if (!navigator.languages || navigator.languages.length === 0) signals.push("no languages");
-  // Chrome headless thường có userAgent chứa "HeadlessChrome"
-  if (/HeadlessChrome|PhantomJS|Selenium|Puppeteer/i.test(navigator.userAgent)) {
-    signals.push("automation UA");
-  }
-  return signals;
-}
-
-/**
- * Phân tích WebGL để lấy renderer/vendor → đưa vào fingerprint.
+ * Fingerprint cơ bản — chỉ dùng dữ liệu có sẵn, KHÔNG cần quyền.
+ * Tổng hợp: UA + ngôn ngữ + màn hình + timezone + CPU + platform + WebGL.
  */
 function getWebGLInfo() {
   try {
@@ -274,21 +194,7 @@ function getWebGLInfo() {
   }
 }
 
-/**
- * Băm SHA-256 từ chuỗi.
- */
-async function sha256(str) {
-  const buf = new TextEncoder().encode(str);
-  const hash = await crypto.subtle.digest("SHA-256", buf);
-  return Array.from(new Uint8Array(hash))
-    .map(b => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-/**
- * Tạo dấu vân tay thiết bị từ nhiều nguồn.
- */
-async function buildFingerprint(iceCandidate) {
+async function buildFingerprint() {
   const webgl = getWebGLInfo();
   const parts = [
     navigator.userAgent,
@@ -300,62 +206,13 @@ async function buildFingerprint(iceCandidate) {
     navigator.deviceMemory || 0,
     navigator.platform || "",
     webgl.vendor,
-    webgl.renderer,
-    iceCandidate || ""
+    webgl.renderer
   ];
   return await sha256(parts.join("|"));
 }
 
-/**
- * Hàm xác minh tổng hợp — trả về { ok, fingerprint, reason }
- */
-async function verifyRealDevice() {
-  // 1. Chống automation
-  const auto = detectAutomation();
-  if (auto.length > 0) {
-    return { ok: false, reason: "Phát hiện trình duyệt tự động hóa: " + auto.join(", ") };
-  }
-
-  // 2. WebRTC ICE
-  const rtc = await checkWebRTCSupport();
-  if (!rtc.ok) return { ok: false, reason: rtc.reason };
-
-  // 3. Media devices
-  const md = await checkMediaDevices();
-  if (!md.ok) return { ok: false, reason: md.reason };
-
-  // 4. Fingerprint
-  const fp = await buildFingerprint(rtc.candidate);
-  return { ok: true, fingerprint: fp };
-}
-
 /* =========================================================================
- * 🔐 PHẦN 2: COOKIE + LOCALSTORAGE 3 LỚP CHỐNG TRÙNG
- * ========================================================================= */
-
-const COOKIE_NAME = "liked_v1";
-const LS_KEY = "liked_v1";
-const ONE_YEAR = 365 * 24 * 60 * 60 * 1000;
-
-function setCookie(name, value, ms) {
-  const expires = new Date(Date.now() + ms).toUTCString();
-  document.cookie = `${name}=${value}; expires=${expires}; path=/; SameSite=Lax`;
-}
-function getCookie(name) {
-  const m = document.cookie.match(new RegExp("(^|; )" + name + "=([^;]*)"));
-  return m ? decodeURIComponent(m[2]) : null;
-}
-
-function isAlreadyLiked() {
-  return getCookie(COOKIE_NAME) === "1" || localStorage.getItem(LS_KEY) === "1";
-}
-function markLiked() {
-  setCookie(COOKIE_NAME, "1", ONE_YEAR);
-  try { localStorage.setItem(LS_KEY, "1"); } catch {}
-}
-
-/* =========================================================================
- * 🔥 PHẦN 3: FIREBASE — ĐỌC / GHI LƯỢT THÍCH
+ * 🔥 FIREBASE
  * ========================================================================= */
 
 let db = null;
@@ -364,37 +221,21 @@ function initFirebase() {
   db = firebase.database();
 }
 
-/**
- * Lắng nghe số lượt thích realtime — cập nhật UI tự động.
- */
 function listenLikeCount(callback) {
   db.ref("likes/count").on("value", (snap) => {
-    const val = snap.val() || 0;
-    callback(val);
+    callback(snap.val() || 0);
   });
 }
 
-/**
- * Kiểm tra fingerprint đã tồn tại chưa (chống trùng ở tầng dữ liệu).
- */
 async function isFingerprintUsed(fp) {
   const snap = await db.ref("likes/fingerprints/" + fp).once("value");
   return snap.exists();
 }
 
-/**
- * Ghi +1 lượt thích với transaction để tránh race condition.
- * Đồng thời ghi fingerprint.
- */
 async function submitLike(fingerprint) {
   const countRef = db.ref("likes/count");
-  const result = await countRef.transaction((current) => {
-    return (current || 0) + 1;
-  });
-  if (!result.committed) {
-    throw new Error("Không thể cập nhật số lượt (transaction bị hủy)");
-  }
-  // Ghi fingerprint kèm timestamp
+  const result = await countRef.transaction((current) => (current || 0) + 1);
+  if (!result.committed) throw new Error("Không thể cập nhật số lượt");
   await db.ref("likes/fingerprints/" + fingerprint).set({
     ts: firebase.database.ServerValue.TIMESTAMP,
     ua: navigator.userAgent.substring(0, 120)
@@ -403,7 +244,7 @@ async function submitLike(fingerprint) {
 }
 
 /* =========================================================================
- * 🎛️ PHẦN 4: UI LOGIC
+ * 🎛️ UI
  * ========================================================================= */
 
 const btn = document.getElementById("likeBtn");
@@ -415,17 +256,14 @@ function setStatus(msg, cls = "") {
   statusMsg.textContent = msg;
   statusMsg.className = "status " + cls;
 }
-
 function updateCountUI(val) {
   countDisplay.textContent = val;
   countDisplay.classList.add("pop");
   setTimeout(() => countDisplay.classList.remove("pop"), 300);
 }
-
 function lockButtonLiked() {
   btn.disabled = true;
   btn.classList.add("liked");
-  btn.classList.remove("verifying");
   btnText.textContent = "✓ Đã thích";
 }
 
@@ -438,55 +276,30 @@ async function bootstrap() {
     return;
   }
 
-  // Lắng nghe count realtime
   listenLikeCount(updateCountUI);
 
-  // Nếu đã like trước đó (cookie/LS) → khóa nút
+  // Đã thích trước đó?
   if (isAlreadyLiked()) {
     lockButtonLiked();
     setStatus("Bạn đã thích trước đó. Cảm ơn!", "ok");
     return;
   }
 
-  // Xác minh thiết bị
-  btnText.innerHTML = '<span class="spinner"></span> Đang xác minh thiết bị…';
-  btn.classList.add("verifying");
-  setStatus("Đang kiểm tra WebRTC, thiết bị media, dấu vân tay…");
-
-  const verify = await verifyRealDevice();
-  if (!verify.ok) {
-    btn.disabled = true;
-    btn.classList.remove("verifying");
-    btnText.textContent = "Thiết bị không hợp lệ";
-    setStatus("Thiết bị không được xác minh, không thể thực hiện thao tác này.", "error");
-    return;
-  }
-
-  // Kiểm tra fingerprint đã dùng chưa
-  let used = false;
-  try {
-    used = await isFingerprintUsed(verify.fingerprint);
-  } catch (e) {
-    setStatus("Lỗi kiểm tra dữ liệu: " + e.message, "error");
-    btn.disabled = true;
-    return;
-  }
-
+  // Tạo fingerprint (chỉ dữ liệu có sẵn, không xin quyền)
+  const fp = await buildFingerprint();
+  const used = await isFingerprintUsed(fp);
   if (used) {
-    lockButtonLiked();
     markLiked();
+    lockButtonLiked();
     setStatus("Thiết bị này đã thích rồi.", "ok");
     return;
   }
 
   // Cho phép nhấn
   btn.disabled = false;
-  btn.classList.remove("verifying");
   btnText.textContent = "❤️ Thích (+1)";
-  setStatus("Xác minh thành công. Nhấn để thích!", "ok");
-
-  // Gắn fingerprint vào dataset để dùng khi click
-  btn.dataset.fp = verify.fingerprint;
+  setStatus("Nhấn để thích!");
+  btn.dataset.fp = fp;
 }
 
 btn.addEventListener("click", async () => {
@@ -494,11 +307,9 @@ btn.addEventListener("click", async () => {
   if (!fp) return;
 
   btn.disabled = true;
-  btn.classList.add("verifying");
   btnText.innerHTML = '<span class="spinner"></span> Đang ghi…';
 
   try {
-    // Kiểm tra lại lần cuối (tránh race giữa các tab)
     if (isAlreadyLiked()) {
       lockButtonLiked();
       setStatus("Bạn đã thích trước đó.", "ok");
@@ -518,14 +329,11 @@ btn.addEventListener("click", async () => {
     setStatus("Thích thành công! Cảm ơn bạn ❤️", "ok");
   } catch (e) {
     setStatus("Lỗi: " + e.message, "error");
-    // Cho phép thử lại nếu lỗi mạng
     btn.disabled = false;
-    btn.classList.remove("verifying");
     btnText.textContent = "❤️ Thử lại";
   }
 });
 
-// Khởi động
 bootstrap();
 </script>
 </body>
