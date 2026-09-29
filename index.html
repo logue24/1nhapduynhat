@@ -6,247 +6,122 @@
 <title>Nút Thích Công Khai</title>
 <style>
   :root {
-    --bg: #0f172a;
-    --card: #1e293b;
-    --primary: #3b82f6;
-    --primary-hover: #2563eb;
-    --success: #10b981;
-    --danger: #ef4444;
-    --text: #f1f5f9;
-    --muted: #94a3b8;
+    --bg:#0f172a; --card:#1e293b; --primary:#3b82f6; --primary-hover:#2563eb;
+    --success:#10b981; --danger:#ef4444; --text:#f1f5f9; --muted:#94a3b8;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
-    color: var(--text);
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
+    background: linear-gradient(135deg,#0f172a 0%,#1e1b4b 100%);
+    color: var(--text); min-height: 100vh; display: flex;
+    align-items: center; justify-content: center; padding: 20px;
   }
   .card {
-    background: var(--card);
-    border-radius: 20px;
-    padding: 40px 30px;
-    max-width: 480px;
-    width: 100%;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-    text-align: center;
-    border: 1px solid rgba(255,255,255,0.05);
+    background: var(--card); border-radius: 20px; padding: 40px 30px;
+    max-width: 480px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    text-align: center; border: 1px solid rgba(255,255,255,0.05);
   }
   h1 { font-size: 1.5rem; margin-bottom: 8px; font-weight: 700; }
-  .subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 30px; }
+  .subtitle { color: var(--muted); font-size: .9rem; margin-bottom: 30px; }
   .count-box {
-    background: rgba(59,130,246,0.1);
-    border: 1px solid rgba(59,130,246,0.3);
-    border-radius: 16px;
-    padding: 24px;
-    margin-bottom: 28px;
+    background: rgba(59,130,246,.1); border: 1px solid rgba(59,130,246,.3);
+    border-radius: 16px; padding: 24px; margin-bottom: 28px;
   }
   .count-number {
-    font-size: 3rem;
-    font-weight: 800;
-    color: var(--primary);
-    line-height: 1;
-    transition: transform 0.3s;
+    font-size: 3rem; font-weight: 800; color: var(--primary);
+    line-height: 1; transition: transform .3s;
   }
   .count-number.pop { transform: scale(1.15); }
   .count-label {
-    color: var(--muted);
-    font-size: 0.85rem;
-    margin-top: 8px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    color: var(--muted); font-size: .85rem; margin-top: 8px;
+    text-transform: uppercase; letter-spacing: 1px;
   }
   #likeBtn {
-    width: 100%;
-    padding: 16px 24px;
-    font-size: 1.1rem;
-    font-weight: 600;
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    background: var(--primary);
-    color: white;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
+    width: 100%; padding: 16px 24px; font-size: 1.1rem; font-weight: 600;
+    border: none; border-radius: 12px; cursor: pointer;
+    background: var(--primary); color: white; transition: all .2s;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
   }
   #likeBtn:hover:not(:disabled) {
-    background: var(--primary-hover);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(59,130,246,0.4);
+    background: var(--primary-hover); transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(59,130,246,.4);
   }
-  #likeBtn:disabled { cursor: not-allowed; opacity: 0.9; }
+  #likeBtn:disabled { cursor: not-allowed; opacity: .9; }
   #likeBtn.liked { background: var(--success); }
   .status {
-    margin-top: 16px;
-    font-size: 0.85rem;
-    color: var(--muted);
-    min-height: 20px;
+    margin-top: 16px; font-size: .85rem; color: var(--muted); min-height: 20px;
   }
   .status.error { color: var(--danger); }
   .status.ok { color: var(--success); }
-  .spinner {
-    display: inline-block;
-    width: 16px;
-    height: 16px;
-    border: 2px solid rgba(255,255,255,0.3);
-    border-top-color: white;
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .footer { margin-top: 24px; font-size: 0.75rem; color: var(--muted); }
+  .footer { margin-top: 24px; font-size: .75rem; color: var(--muted); }
 </style>
 </head>
 <body>
   <div class="card">
     <h1>❤️ Nút Thích Công Khai</h1>
     <p class="subtitle">Mỗi người chỉ +1 duy nhất — nhấn là xong</p>
-
     <div class="count-box">
-      <div class="count-number" id="countDisplay">—</div>
+      <div class="count-number" id="countDisplay">0</div>
       <div class="count-label">lượt thích</div>
     </div>
-
-    <button id="likeBtn" disabled>
-      <span id="btnText">Đang tải…</span>
+    <button id="likeBtn">
+      <span id="btnText">❤️ Thích (+1)</span>
     </button>
-
     <div class="status" id="statusMsg"></div>
-    <div class="footer">Bảo vệ bằng Cookie + LocalStorage + Fingerprint</div>
+    <div class="footer">Lưu cục bộ bằng LocalStorage + Cookie</div>
   </div>
 
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
 <script>
-/* =========================================================================
- * ⚙️ CẤU HÌNH FIREBASE — THAY BẰNG THÔNG TIN CỦA BẠN
- * ========================================================================= */
-const FIREBASE_CONFIG = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-  projectId: "YOUR_PROJECT",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "000000000000",
-  appId: "1:000000000000:web:xxxxxxxxxxxxxxxx"
-};
-
-/* =========================================================================
- * 🔐 CHỐNG TRÙNG 3 LỚP (KHÔNG CẦN XÁC MINH THIẾT BỊ)
- * ========================================================================= */
-
 const COOKIE_NAME = "liked_v1";
-const LS_KEY = "liked_v1";
-const ONE_YEAR = 365 * 24 * 60 * 60 * 1000;
+const LS_LIKED    = "liked_v1";
+const LS_COUNT    = "like_count_v1";
+const ONE_YEAR    = 365 * 24 * 60 * 60 * 1000;
 
-function setCookie(name, value, ms) {
-  const expires = new Date(Date.now() + ms).toUTCString();
-  document.cookie = `${name}=${value}; expires=${expires}; path=/; SameSite=Lax`;
+/* Cookie + LocalStorage */
+function setCookie(n, v, ms) {
+  const e = new Date(Date.now() + ms).toUTCString();
+  document.cookie = `${n}=${v}; expires=${e}; path=/; SameSite=Lax`;
 }
-function getCookie(name) {
-  const m = document.cookie.match(new RegExp("(^|; )" + name + "=([^;]*)"));
+function getCookie(n) {
+  const m = document.cookie.match(new RegExp("(^|; )" + n + "=([^;]*)"));
   return m ? decodeURIComponent(m[2]) : null;
 }
 function isAlreadyLiked() {
-  return getCookie(COOKIE_NAME) === "1" || localStorage.getItem(LS_KEY) === "1";
+  return getCookie(COOKIE_NAME) === "1" || localStorage.getItem(LS_LIKED) === "1";
 }
 function markLiked() {
   setCookie(COOKIE_NAME, "1", ONE_YEAR);
-  try { localStorage.setItem(LS_KEY, "1"); } catch {}
+  try { localStorage.setItem(LS_LIKED, "1"); } catch {}
 }
 
-/**
- * Băm SHA-256 từ chuỗi.
- */
+/* Count */
+function getCount() {
+  const v = parseInt(localStorage.getItem(LS_COUNT) || "0", 10);
+  return isNaN(v) ? 0 : v;
+}
+function setCount(v) {
+  try { localStorage.setItem(LS_COUNT, String(v)); } catch {}
+}
+
+/* Fingerprint đơn giản (để chống trùng mạnh hơn 1 chút) */
 async function sha256(str) {
   const buf = new TextEncoder().encode(str);
   const hash = await crypto.subtle.digest("SHA-256", buf);
   return Array.from(new Uint8Array(hash))
-    .map(b => b.toString(16).padStart(2, "0"))
-    .join("");
+    .map(b => b.toString(16).padStart(2, "0")).join("");
 }
-
-/**
- * Fingerprint cơ bản — chỉ dùng dữ liệu có sẵn, KHÔNG cần quyền.
- * Tổng hợp: UA + ngôn ngữ + màn hình + timezone + CPU + platform + WebGL.
- */
-function getWebGLInfo() {
-  try {
-    const canvas = document.createElement("canvas");
-    const gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
-    if (!gl) return { vendor: "none", renderer: "none" };
-    const dbg = gl.getExtension("WEBGL_debug_renderer_info");
-    return {
-      vendor: dbg ? gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL) : gl.getParameter(gl.VENDOR),
-      renderer: dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER)
-    };
-  } catch {
-    return { vendor: "err", renderer: "err" };
-  }
-}
-
 async function buildFingerprint() {
-  const webgl = getWebGLInfo();
   const parts = [
-    navigator.userAgent,
-    navigator.language,
-    navigator.languages ? navigator.languages.join(",") : "",
+    navigator.userAgent, navigator.language,
     screen.width + "x" + screen.height + "x" + screen.colorDepth,
     new Date().getTimezoneOffset(),
     navigator.hardwareConcurrency || 0,
-    navigator.deviceMemory || 0,
-    navigator.platform || "",
-    webgl.vendor,
-    webgl.renderer
+    navigator.platform || ""
   ];
   return await sha256(parts.join("|"));
 }
 
-/* =========================================================================
- * 🔥 FIREBASE
- * ========================================================================= */
-
-let db = null;
-function initFirebase() {
-  if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
-  db = firebase.database();
-}
-
-function listenLikeCount(callback) {
-  db.ref("likes/count").on("value", (snap) => {
-    callback(snap.val() || 0);
-  });
-}
-
-async function isFingerprintUsed(fp) {
-  const snap = await db.ref("likes/fingerprints/" + fp).once("value");
-  return snap.exists();
-}
-
-async function submitLike(fingerprint) {
-  const countRef = db.ref("likes/count");
-  const result = await countRef.transaction((current) => (current || 0) + 1);
-  if (!result.committed) throw new Error("Không thể cập nhật số lượt");
-  await db.ref("likes/fingerprints/" + fingerprint).set({
-    ts: firebase.database.ServerValue.TIMESTAMP,
-    ua: navigator.userAgent.substring(0, 120)
-  });
-  return result.snapshot.val();
-}
-
-/* =========================================================================
- * 🎛️ UI
- * ========================================================================= */
-
+/* UI */
 const btn = document.getElementById("likeBtn");
 const btnText = document.getElementById("btnText");
 const countDisplay = document.getElementById("countDisplay");
@@ -267,64 +142,44 @@ function lockButtonLiked() {
   btnText.textContent = "✓ Đã thích";
 }
 
-async function bootstrap() {
-  try {
-    initFirebase();
-  } catch (e) {
-    setStatus("Không kết nối được Firebase: " + e.message, "error");
-    btnText.textContent = "Lỗi cấu hình";
-    return;
-  }
+/* Khởi động */
+(async function bootstrap() {
+  updateCountUI(getCount());
 
-  listenLikeCount(updateCountUI);
-
-  // Đã thích trước đó?
   if (isAlreadyLiked()) {
     lockButtonLiked();
     setStatus("Bạn đã thích trước đó. Cảm ơn!", "ok");
     return;
   }
+  setStatus("Nhấn để thích!");
+})();
 
-  // Tạo fingerprint (chỉ dữ liệu có sẵn, không xin quyền)
-  const fp = await buildFingerprint();
-  const used = await isFingerprintUsed(fp);
-  if (used) {
-    markLiked();
+/* Sự kiện nhấn */
+btn.addEventListener("click", async () => {
+  if (isAlreadyLiked()) {
     lockButtonLiked();
-    setStatus("Thiết bị này đã thích rồi.", "ok");
+    setStatus("Bạn đã thích trước đó.", "ok");
     return;
   }
-
-  // Cho phép nhấn
-  btn.disabled = false;
-  btnText.textContent = "❤️ Thích (+1)";
-  setStatus("Nhấn để thích!");
-  btn.dataset.fp = fp;
-}
-
-btn.addEventListener("click", async () => {
-  const fp = btn.dataset.fp;
-  if (!fp) return;
-
   btn.disabled = true;
-  btnText.innerHTML = '<span class="spinner"></span> Đang ghi…';
+  btnText.textContent = "Đang ghi…";
 
   try {
-    if (isAlreadyLiked()) {
-      lockButtonLiked();
-      setStatus("Bạn đã thích trước đó.", "ok");
-      return;
-    }
-    const used = await isFingerprintUsed(fp);
-    if (used) {
+    // Tạo fingerprint (chỉ dùng nội bộ để chống trùng cookie bị xóa)
+    const fp = await buildFingerprint();
+    const usedKey = "fp_used_" + fp.substring(0, 16);
+    if (localStorage.getItem(usedKey) === "1") {
       markLiked();
       lockButtonLiked();
-      setStatus("Thiết bị đã thích rồi.", "ok");
+      setStatus("Thiết bị này đã thích rồi.", "ok");
       return;
     }
 
-    await submitLike(fp);
+    const newCount = getCount() + 1;
+    setCount(newCount);
+    localStorage.setItem(usedKey, "1");
     markLiked();
+    updateCountUI(newCount);
     lockButtonLiked();
     setStatus("Thích thành công! Cảm ơn bạn ❤️", "ok");
   } catch (e) {
@@ -333,8 +188,6 @@ btn.addEventListener("click", async () => {
     btnText.textContent = "❤️ Thử lại";
   }
 });
-
-bootstrap();
 </script>
 </body>
 </html>
